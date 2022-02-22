@@ -646,6 +646,17 @@ class Game(object):
                 self.unmute()
             else:
                 observation = self.state.deepCopy()
+
+            #Para crear el documento con la información del mapa, pacman, fantasmas, la comida y la puntuación
+            if (agent.__class__.__name__ == "BasicAgentAA"):
+                with open ("info", "a") as myfile:
+                    import os
+                    # Insert header when the file is being opened for the first time
+                    if(os.stat("info").st_size==0):
+                        myfile.write("Width, Height, Walls Map, Pacman Position, Pacman Direction, Legal Actions,  Number of Ghosts, Living Ghosts, Ghosts Positions, Ghosts Directions, Ghosts Distances, Pac Dots, Distance Nearest Pac Dot, Food Map, Capsules Positions, Score\n")
+                    myfile.write(agent.printLineData(observation)) 
+
+
             # Solicit an action
             action = None
             step += 1
