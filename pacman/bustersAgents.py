@@ -337,8 +337,11 @@ class BasicAgentAA(BustersAgent):
             move = legal[random.randint(0, len(legal)-1)]
 
         return move
-
-
-
+  
     def printLineData(self, gameState):
-        return "XXXXXXXXXX"
+        infoMapa = str(gameState.data.layout.width)+","+str(gameState.data.layout.height)+",("+str(gameState.getWalls()).replace('\n',',')+"),"
+        infoPacman = str(gameState.getPacmanPosition())+","+gameState.data.agentStates[0].getDirection() + "," + str(gameState.getLegalPacmanActions())+","
+        infoGhosts = str(gameState.getNumAgents() - 1)+","+str(gameState.getLivingGhosts())+","+str(gameState.getGhostPositions())+","+str([gameState.getGhostDirections().get(i) for i in range(0, gameState.getNumAgents() - 1)])+","+str(gameState.data.ghostDistances) + ","
+        infoComida = str(gameState.getNumFood())+","+str(gameState.getDistanceNearestFood())+",("+str(gameState.getFood()).replace('\n',',')+"),"+str(gameState.getCapsules()) + ","
+        infoTotal = infoMapa+infoPacman+infoGhosts+infoComida+str(gameState.getScore())+"\n"
+        return infoTotal
