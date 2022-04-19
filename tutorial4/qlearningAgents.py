@@ -75,7 +75,7 @@ class QLearningAgent(ReinforcementAgent):
         Compute the row of the qtable for a given state.
         For instance, the state (3,1) is the row 7
         """
-        return state[0]+state[1]*7
+        return state[0]+state[1]*4
 
     def getQValue(self, state, action):
 
