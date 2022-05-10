@@ -708,11 +708,18 @@ class Game(object):
                 if tickCounter > 0: # A partir del tick 1 podemos llamar a la función update para el estado anterior
                     reward = agent.getReward(states[0], states[1])
                     agent.update(states[0], actions[0], states[1], reward)
-                    # Eliminar la información del estado anterior de las lsitas
+                    # Eliminar la información del estado anterior de las listas
                     states.pop(0)
                     actions.pop(0)
                 tickCounter += 1
-
+                #print
+                with open ("info", "a") as myfile:
+                        import os
+                        # Insert header when the file is being opened for the first time
+                        if(os.stat("info").st_size==0):
+                            myfile.write("Width, Height, Walls Map, Pacman Position, Pacman Direction, Legal Actions,  Number of Ghosts, Living Ghosts, Ghosts Positions, Ghosts Directions, Ghosts Distances, Pac Dots, Distance Nearest Pac Dot, Food Map, Capsules Positions, Score\n")
+                        myfile.write(agent.printLineData(observation))
+                        
             # Execute the action
             self.moveHistory.append( (agentIndex, action) )
             if self.catchExceptions:
