@@ -618,6 +618,12 @@ class Game(object):
         agentIndex = self.startingIndex
         numAgents = len( self.agents )
         step = 0
+
+        #Q-learning
+        states = []
+        actions = []
+        tickCounter = 0
+
         while not self.gameOver:
             # Fetch the next agent
             agent = self.agents[agentIndex]
@@ -693,6 +699,19 @@ class Game(object):
             else:
                 action = agent.getAction(observation)
             self.unmute()
+
+            # Q-learning
+            if (agent == self.agents[0] and agent.__class__.__name__ == "QLearningAgent"):
+                # Guardar el estado actual y la acción que se va a ejecutar en las listas
+                states.append(observation)                   
+                actions.append(action)
+                if tickCounter > 0: # A partir del tick 1 podemos llamar a la función update para el estado anterior
+                    reward = agent.getReward(states[0], states[1])
+                    agent.update(states[0], actions[0], states[1], reward)
+                    # Eliminar la información del estado anterior de las lsitas
+                    states.pop(0)
+                    actions.pop(0)
+                tickCounter += 1
 
             # Execute the action
             self.moveHistory.append( (agentIndex, action) )
