@@ -326,44 +326,44 @@ class QLearningAgent(BustersAgent):
         pacmanPosition = gameState.getPacmanPosition()
         livingGhosts = gameState.getLivingGhosts()
         minDistance = gameState.data.layout.width * gameState.data.layout.height
-        mini = -1
+        minIndex = -1
 
-        # Calcular el index del fantasma más cercano
-        for i in range(1, len(livingGhosts)): # Empezamos por el index 1 ya que el 0 en livingGhosts representa a Pac-Man
+        # Calcular el index del fantasma mas cercano
+        for i in range(1, len(livingGhosts)): # El index 0 en livingGhosts es Pac-Man, por eso se empieza el rango por 1
             if livingGhosts[i]:
                 ghostPosition = gameState.getGhostPositions()[i-1]
                 currentDistance = self.distancer.getDistance(pacmanPosition, ghostPosition)
                 if currentDistance < minDistance:
                     minDistance = currentDistance
-                    mini = i-1
+                    minIndex = i-1
 
-        if mini == -1: # Si no hay fantasmas vivos return el estado final
+        if minIndex == -1: # Si no quedan/no hay fantasmas vivos se returnea el estado final
             return state
 
-        # Calcular la posición relativa del fantasma respecto a Pac-Man
-        ghostPosition = gameState.getGhostPositions()[mini]
-        xDistance = pacmanPosition[0] - ghostPosition[0]
-        yDistance = pacmanPosition[1] - ghostPosition[1]
+        # Calcular la posición del fantasma objetivo (mas cercano) y su distancia en los ejes respecto a Pac-man
+        ghostPosition = gameState.getGhostPositions()[minIndex]
+        distanceX = pacmanPosition[0] - ghostPosition[0]
+        distanceY = pacmanPosition[1] - ghostPosition[1]
 
-        # Asingnar la dirección relativa
-        if (yDistance < 0 and xDistance == 0):
+        # Indicar la direccion relativa del fantasma objetivo respecto a Pac-Man
+        if (distanceY < 0 and distanceX == 0):
             state[0] = Directions.NORTH
-        if (yDistance < 0 and xDistance < 0):
+        if (distanceY < 0 and distanceX < 0):
             state[0] = "Northeast"
-        if (yDistance == 0 and xDistance < 0):
+        if (distanceY == 0 and distanceX < 0):
             state[0] = Directions.EAST
-        if (yDistance > 0 and xDistance < 0):
+        if (distanceY > 0 and distanceX < 0):
             state[0] = "Southeast"
-        if (yDistance > 0 and xDistance == 0):
+        if (distanceY > 0 and distanceX == 0):
             state[0] = Directions.SOUTH
-        if (yDistance > 0 and xDistance > 0):
+        if (distanceY > 0 and distanceX > 0):
             state[0] = "Southwest"
-        if (yDistance == 0 and xDistance > 0):
+        if (distanceY == 0 and distanceX > 0):
             state[0] = Directions.WEST
-        if (yDistance < 0 and xDistance > 0):
+        if (distanceY < 0 and distanceX > 0):
             state[0] = "Northwest" 
         
-        # Calcular en que rango del 1 al 10 está la distancia al fantasma, dependiendo de las dimensiones del mapa
+        # Dividir la distancia entre Pac-Man y el fantasma objetivo en 10 rangos (para poder generalizar independientemente de las dimensiones del mapa) 
         ghostDistance = self.distancer.getDistance(pacmanPosition, ghostPosition)
         rangeSize = ((gameState.data.layout.width-2)+(gameState.data.layout.height-4))/10.0
         state[1] = int(math.ceil(ghostDistance/rangeSize))
@@ -371,33 +371,41 @@ class QLearningAgent(BustersAgent):
         return state
 
     def getReward(self, gameState, nextGameState):
-        # Calcular el índice del fantasma más cercano
         pacmanPosition = gameState.getPacmanPosition()
         livingGhosts = gameState.getLivingGhosts()
         minDistance = gameState.data.layout.width * gameState.data.layout.height
-        mini = -1
+        minIndex = -1
 
+        # Calcular el indice del fantasma mas cercano (fantasma objetivo)
         for i in range(1, len(livingGhosts)):
             if livingGhosts[i]:
                 ghostPosition = gameState.getGhostPositions()[i-1]
                 currentDistance = self.distancer.getDistance(pacmanPosition, ghostPosition)
                 if currentDistance < minDistance:
                     minDistance = currentDistance
-                    mini = i-1
+                    minIndex = i-1
 
-        ghostPosition = gameState.getGhostPositions()[mini]
+        ghostPosition = gameState.getGhostPositions()[minIndex]
         ghostDistance = self.distancer.getDistance(pacmanPosition, ghostPosition)
 
-        # Si Pac-Man se ha comido al fantasma más cercano en el siguiente turno devolver un refuerzo de 200
-        if not nextGameState.getLivingGhosts()[mini+1]:
+        #Calcular si Pac-man se ha comido un punto de comida
+        foodDistance = gameState.getDistanceNearestFood()
+        foodNumber = gameState.getNumFood()
+        nextFoodNumber = nextGameState.getNumFood()
+        if foodNumber - nextFoodNumber > 0:
+            return 100  #si se come un punto en el siguiente tick se da un refuerzo positivo de 100
+        
+
+        # Si Pac-Man se ha comido al fantasma mas cercano en el siguiente tick devolver un refuerzo de 200
+        if not nextGameState.getLivingGhosts()[minIndex+1]:
             return 200
 
-        # Calcular la distancia al fantasma en el siguiente turno
-        nextGhostPosition = nextGameState.getGhostPositions()[mini]
+        # Calcular la distancia al fantasma objetivo en el siguiente tick
+        nextGhostPosition = nextGameState.getGhostPositions()[minIndex]
         nextPacmanPosition = nextGameState.getPacmanPosition()
         nextGhostDistance = self.distancer.getDistance(nextPacmanPosition, nextGhostPosition)
        
-        # Devolver la diferencia entre la distancia de este tick y el siguiente
+        # Devolver la diferencia entre la distancia al fantasma objetivo de el presente tick y el siguiente
         return ghostDistance - nextGhostDistance
         
 
@@ -428,7 +436,7 @@ class QLearningAgent(BustersAgent):
         elif (state[0] == "Northwest"):
             direction = 7
 
-        # Primero se encuentran las filas de todas las direcciones con distancia 1 y luego van aumentando el valor de la distancia
+        # En primer lugar para aquellas filas con estados con una distancia 1, luego se asigna al resto incrementalmente dependiendo del valor de la distancia
         return direction+(state[1]-1)*8
 
     def getQValue(self, gameState, action):
@@ -452,6 +460,7 @@ class QLearningAgent(BustersAgent):
         """
         legalActions = gameState.getLegalActions()
         legalActions.remove('Stop')
+
         return max(self.q_table[self.computePosition(gameState)])
 
     def computeActionFromQValues(self, gameState):
@@ -486,7 +495,6 @@ class QLearningAgent(BustersAgent):
         # Pick Action
         legalActions = gameState.getLegalActions()
         legalActions.remove('Stop')
-        action = 'Stop'
 
         flip = util.flipCoin(self.epsilon)
 
