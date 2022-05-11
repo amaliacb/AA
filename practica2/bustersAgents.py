@@ -286,8 +286,8 @@ class QLearningAgent(BustersAgent):
         self.actions = {"North":0, "East":1, "South":2, "West":3}
         self.table_file = open("qtable.txt", "r+")
         self.q_table = self.readQtable()
-        self.epsilon = 0.05
-        self.alpha = 1
+        self.epsilon = 0
+        self.alpha = 0
         self.discount = 0
 
         "Pre-computes the distance between every two points."
@@ -387,14 +387,6 @@ class QLearningAgent(BustersAgent):
 
         ghostPosition = gameState.getGhostPositions()[minIndex]
         ghostDistance = self.distancer.getDistance(pacmanPosition, ghostPosition)
-
-        #Calcular si Pac-man se ha comido un punto de comida
-        foodDistance = gameState.getDistanceNearestFood()
-        foodNumber = gameState.getNumFood()
-        nextFoodNumber = nextGameState.getNumFood()
-        if foodNumber - nextFoodNumber > 0:
-            return 100  #si se come un punto en el siguiente tick se da un refuerzo positivo de 100
-        
 
         # Si Pac-Man se ha comido al fantasma mas cercano en el siguiente tick devolver un refuerzo de 200
         if not nextGameState.getLivingGhosts()[minIndex+1]:
